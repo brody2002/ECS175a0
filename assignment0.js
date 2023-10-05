@@ -47,12 +47,24 @@ class Shape
      */
     createVAO( gl, shader )
     {
-        throw '"Shape.createVAO" not implemented'
-
+        
         // TODO: Create a vertex attribute object (VAO) and store it in 'this.vertex_array_object'
         // TODO: Bind the VBO and link it to the shader attribute 'a_position'
         // TODO: Set the correct vertex attrib pointer settings for your VBO, so that the vertex data is mapped correctly to 'a_position'
         // TODO: Unbind buffers and clean up
+        
+
+        const VAO = gl.createVertexArray();
+        this.vertex_array_object = VAO;
+
+        gl.bindVertexArray(this.vertex_array_object);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices_buffer);
+        const positionAttrib = gl.getAttribLocation(shader.program, 'a_position');
+        gl.enableVertexAttribArray(positionAttrib);
+        gl.vertexAttribPointer(positionAttrib, this.num_components, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindVertexArray(null);
     }
 
     /**
@@ -61,11 +73,16 @@ class Shape
      */
     createVBO( gl )
     {
-        throw '"Shape.createVBO" not implemented'
+        
 
         // TODO: Create a vertex buffer (VBO) and store it in 'this.vertices_buffer'
         // TODO: Fill the buffer with data in 'this.vertices'
         // TODO: Pay attention to the data type of the buffer and refer to the book
+
+        this.vertices_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertices_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
     }
 
     /**
@@ -74,11 +91,18 @@ class Shape
      */
     createIBO( gl )
     {
-        throw '"Shape.createIBO" not implemented'
+        
 
         // TODO: Create an index buffer object (IBO) and store it in 'this.index_buffer'
         // TODO: Fill the buffer with data in 'this.indices' 
         // TODO: Pay attention to the datatype of the buffer and refer to the book
+        this.index_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.index_buffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+
+
     }
 
     /**
@@ -94,7 +118,7 @@ class Shape
      */
     render( gl )
     {
-        throw '"Shape.render" not implemented'
+        
 
         // TODO: Bind vertex array object
         // TODO: Bind index buffer
@@ -102,6 +126,17 @@ class Shape
         // TODO: The color is stored in 'this.color' and needs to be passed to the uniform named 'u_color' in the shader
         // TODO: Draw the element
         // TODO: Clean Up
+
+        gl.bindVertexArray(this.vertex_array_object);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.index_buffer);
+
+        const colorUniform = gl.getUniformLocation(this.shader.program, 'u_color');
+        gl.uniform3fv(colorUniform, this.color);
+
+        gl.drawElements(this.draw_mode, this.num_elements, gl.UNSIGNED_SHORT, 0);
+
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+        gl.bindVertexArray(null);
     }
 
 }
@@ -115,7 +150,7 @@ class Triangle extends Shape
 
     constructor( gl, shader, position, color, sideLength) 
     {
-        throw '"Triangle" constructor not implemented'
+        
 
         // You will need those angles to define your triangle vertices
         let cosangle = Math.cos(deg2rad(30))
@@ -123,14 +158,23 @@ class Triangle extends Shape
 
         // TODO: Create a list of vertices defining the triangle
         let vertices = [
-            // Side1
+            // Side1 
+            
             // Side2 
-            // Side3
+            
+            // Side3\
+
+
+            position[0], position[1] - sideLength / 2, //top
+            position[0] - (sideLength / 2) *cosangle , position[1] + (sideLength / 2) * sinangle,
+            position[0] + (sideLength / 2)* cosangle, position[1] + (sideLength / 2) * sinangle
+            
         ]
 
         // TODO: Create a list of indices referencing the triangle vertices in order
         let indices = [
             // Triangle indices
+            0, 1, 2
         ]
 
         // TODO: Check out the 'Shape' class and understand what the constructor does
@@ -162,10 +206,13 @@ class WebGlApp
      */
     initGl( )
     {
-        throw '"WebGLApp.initGL" not implemented'
+        
 
-        // TODO: Get the canvas element and retrieve its webgl2 context 
+        // TODO: Get the canvas element and retrieve its webgl2 context
         // TODO: Return the context
+        const canvas = document.getElementById('canvas');
+        const gl = canvas.getContext('webgl2');
+        return gl;
     }
 
     /**
@@ -177,9 +224,11 @@ class WebGlApp
      */
     setViewport( gl, width, height )
     {
-        throw '"WebGLApp.setViewport" not implemented'
+        
 
         // TODO: Set the GL viewport to fill the full width and height of the canvas
+        gl.viewport(0, 0, width, height);
+        //IDK IF THIS IS IT
     }
 
     /**
@@ -189,12 +238,18 @@ class WebGlApp
      */
     clearCanvas( gl )
     {
-        throw '"WebGlApp.clearCanvas" not implemented'
+        
 
-        // TODO: Clear the canvas with Aggie Blue (#022851) 
+        // TODO: Clear the canvas with Aggie Blue (#022851)
+        const color = hex2rgb("#022851")
+        gl.clearColor(color[0],color[1],color[2],1.0);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        
+        
         // TODO: Check out the helper function 'hex2rgb'
     }
-
+    
     /**
      * Adds a triangle shape to the list of shapes
      * 
@@ -205,11 +260,15 @@ class WebGlApp
      */
     addTriangle( gl, shader, position, sideLength )
     {
-        throw '"WebGlApp.addTriangle" not implemented'
+        
 
         // TODO: Add a new Triangle shape to the list of shapes
         // TODO: Use the 'Triangle' class defined above
         // TODO: Make the color Aggie Gold (#FFBF00) or any color that contrasts nicely with Aggie Blue (#022851)
+
+        const color = hex2rgb('#FFBF00');
+        const triangle = new Triangle(gl, shader, position, color, sideLength);
+        this.shapes.push(triangle); 
     }
 
     /**
@@ -232,11 +291,19 @@ class WebGlApp
      */
     render( gl, canvas_width, canvas_height )
     {
-        throw '"WebGlApp.render" not implemented'
+        
 
         // TODO: Set the viewport to span the full 'canvas_width' and 'canvas_height' using the function you implemented above
         // TODO: Clear the active viewport with Aggie Blue using the function you implemented above
-        // TODO: Loop through all shapes and render them using the Shape's render function
+        // TODO: Loop through all shapes and render them using the Shape's render function  
+
+        this.setViewport(gl, canvas_width, canvas_height);
+        this.clearCanvas(gl);
+
+        for (const shape of this.shapes) {
+            shape.render(gl);
+        }
+
     }
 
 }
